@@ -153,6 +153,56 @@ int main() {
 # Thread Management
 - `join()`: main() waits for the thread to finish execution. if you don't write join() thread will be lost as main() will not stop for it.
 - `detach()`: Allows the thread to run independently from the main thread. After detaching, the thread cannot be joined.
+
+Example for detach():
+```cpp
+#include <iostream>
+#include <thread>
+using namespace std;
+void printHello()
+{
+    cout<<"Hello thread"<<endl;
+}
+int main()
+{
+    thread t1(printHello);
+    t1.join();
+    cout<<"Hello, Prashun "<<endl;
+    t1.detach(); // Detach the thread
+    return 0;
+}
+```
+**OUTPUT:**
+
+This program will compile and run, but at the end, it will throw the message:
+
+    terminate called without an active exception
+
+This happens because the thread is detached and `main()` is exiting before the thread has finished executing.
+
+When `join()` is used, it consumes the thread and `joinable` becomes false. So, `detach()` will not have any thread to detach, and it will throw an error.
+
+You can use `detach()` or `join()`, but not both.
+
+---
+
+**A common interview question:**
+
+What if we remove both `join()` and `detach()`?
+
+```cpp
+thread t1(printHello);
+return 0;
+```
+
+When `main()` ends, the destructor of `std::thread` is called. Since the thread is still joinable, the destructor calls `std::terminate()`. Every `std::thread` must be either joined or detached before it is destroyed.
+
+
+
+
+
+---
+
 - `mutex`: A synchronization primitive that prevents multiple threads from accessing shared resources simultaneously.
 - `lock_guard`: A RAII-style mechanism for managing mutex locks. It locks the mutex when created and unlocks it when destroyed.
 - `sleep_for`: Suspends the thread for a specified duration.
