@@ -1,20 +1,23 @@
 #include<iostream>
 #include<thread>
 
-//using namespace std;  // not encouraged to use in modern c++, use std:: instead
+using namespace std; 
 void func(int n)
 {
+    cout<<"Hello thread from function, parameter passed :";
     std::cout<<n<<std::endl;
 }
 
 int main(){
 
-    std::thread t([](){
-        std::cout << "hello thread"<<std::endl;
+    auto lambda = ([](){
+        std::cout << "hello thread from lambda expression"<<std::endl;
     }); //lambda expression
 
     std::thread fp_thread(func, 4); //function pointer
     fp_thread.join();
+
+    thread t(lambda);
     t.join();
     return 0;
 } 

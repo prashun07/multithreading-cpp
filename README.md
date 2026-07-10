@@ -1,23 +1,26 @@
 # Multithreading in C++
 Multithreading is a technique where a program is divided into smaller units of execution called threads. 
 Threads are lightweight processes that share the same memory space and can perform tasks independently, enhancing the program's efficiency and responsiveness.
+- main() is the main thread of execution containing the sub threads.
 - Each thread runs independently but shares resources like memory. 
 - Helps in improving performance by utilizing multiple cpu cores efficienlty. 
-- <thread> header file. 
+- #include<thread> header file. 
 > thread thread_name(callable);
  -> thread_name : it is object of thread class. 
  -> callable : it is a callable object like function pointer,function object. 
 
+Example:
 ```cpp
 #include<iostream>
 #include<thread>
+
+void printHello()
+{
+    std::cout << "hello thread"<<std::endl;
+}
 int main(){
-
-    std::thread t([](){
-        std::cout << "hello thread"<<std::endl;
-    }); //lambda expression as callable
-
-    t.join();
+    std::thread t(printHello);
+    t.join(); 
     return 0;
 } 
 ```
@@ -148,7 +151,7 @@ int main() {
 ```
 
 # Thread Management
-- `join()`: Waits for the thread to finish execution.
+- `join()`: main() waits for the thread to finish execution. if you don't write join() thread will be lost as main() will not stop for it.
 - `detach()`: Allows the thread to run independently from the main thread. After detaching, the thread cannot be joined.
 - `mutex`: A synchronization primitive that prevents multiple threads from accessing shared resources simultaneously.
 - `lock_guard`: A RAII-style mechanism for managing mutex locks. It locks the mutex when created and unlocks it when destroyed.
