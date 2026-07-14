@@ -1,4 +1,3 @@
-
 #include<iostream>
 #include<chrono>
 #include<thread>
@@ -15,7 +14,6 @@ void findEven(ull start, ull end , ull *EvenSum)
             (*EvenSum) += i;
         }
     }
-
 }
 
 void findOdd(ull start , ull end ,ull *OddSum)
@@ -43,7 +41,6 @@ int main()
     t2.join();
     // findEven(start ,end , &EvenSum);
     // findOdd(start, end , &OddSum);
-
     auto stopTime=high_resolution_clock::now();
     auto duration= duration_cast<microseconds>(stopTime-startTime);
 
@@ -53,7 +50,5 @@ int main()
     cout<< "Sec: " << duration.count()/1000000<<endl;
     return 0;
 }
-
-
 // To compile use: g++ -std=c++11 your_file.cpp -o your_file -pthread
 // Compiler needs to supports C++11 or higher ( thread added in c++) 
