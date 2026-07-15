@@ -363,7 +363,7 @@ std::condition_variable variable_name; // Declare a condition variable
 
 Example : [condition_variable.cpp](condition_variable.cpp)
 
-* Common Issue with Condition Variables*
+**Common Issue with Condition Variables**
 - Spurious Wakeups: A waiting thread may wake up without a notification.
 - Lost wakeup: A thread may miss a notification if it has not started waiting yet.
 - Incorrect predicate usage: Failing to check a conditon after waking up can lead to incorrect behavior.
