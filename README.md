@@ -149,6 +149,29 @@ int main() {
     return 0;
 }
 ```
+**Thread specific functions**
+
+```cpp
+#include <thread>
+#include <chrono>
+
+// These can be used within a thread
+
+// Get thread ID of thread
+std::this_thread::get_id();
+
+// Give priority to other threads, pause execution
+std::this_thread::yield();
+
+// Sleep for some amount of time
+std::this_thread::sleep_for(std::chrono::seconds(1));
+
+// Sleep until some time
+std::chrono::system_clock::time_point time_point = std::chrono::system_clock::now()
+                                                   + std::chrono::seconds(10);
+std::this_thread::sleep_until(time_point);
+```
+---
 
 # Thread Management
 - `join()`: main() waits for the thread to finish execution. if you don't write join() thread will be lost as main() will not stop for it.
@@ -279,6 +302,7 @@ Final shared data: 3
 - No, we cannot control the order of execution of threads. it is done by the operating system's scheduler but we can make some thread wait for other thread to finish execution using condition variable(discussed later).
 - The main job of mutex is to protect shared resource from being accessed by multiple threads at the same time. it does not control the order of execution of threads.
 
+**Difference between lock_guard and unique_lock(Most Important interview question)**
 # lock_guard
 - Simple mutex wrapper that locks a mutex during construction and automatically unlocks it during destruction(when object goes out of scope).
 - designed for minimal overhead and exception safety.
@@ -296,12 +320,65 @@ Example : [lock_guard.cpp](lock_guard.cpp)
 - Flexible mutex wrapper that supports manual locking and unlocking, deferred locking, timed locking, and ownership transfer.
 - Suitable for situations where more control over the locking mechanism is needed.
 - Ownership transfer: it allows transferring ownership of the lock from one `unique_lock` object to another, enabling more complex locking strategies and resource management.
+- Used when we need to defer lock or conditionally lock a mutex.
+- When we require timed locking or unlocking of a mutex.
+- When transfer of ownership of lock if required between different scopes or threads.
 
 ```cpp
 std::mutex mtx; // Global mutex
 std::unique_lock<std::mutex>lock(mtx); // Lock the mutex
 // Access shared resource
+// lock() and unlock() will only be used with defer lock else it will throw an error.
+// because unique_lock automatically locks and unlocks the mutex like lockguard.
+// unlock will be called when unique_lock goes out of scope automatically.
+// if you want to unlock mutex before the end of scope, you can use unlock() method of unique_lock.
 lock.unlock(); // Manually unlock the mutex
 lock.lock(); // Manually lock the mutex again
 ```
 Example : [unique_lock.cpp](unique_lock.cpp)
+- defer lock : std::defer_lock is a tag to tell a lock wrapper to just wrap the mutex without locking it. the thread will be manually locked later.
+- Overhead: lockguard has less overhead because it only stores a reference or pointer to the mutex it is managing, while unique_lock stores additional state information to support its advanced features. This extra state information can lead to slightly higher memory usage and performance overhead compared to lock_guard.
+
+*Brainstorming:* Can we use lock_guard and unique_lock together in the same program?
+- Yes, we can use lock_guard and unique_lock together in the same program. However, we should be careful to avoid deadlocks and ensure that the locking order is consistent. It is generally recommended to use one type of lock consistently within a given scope or function to maintain clarity and avoid confusion.
+
+*Brainstorming:* Mutex will lock/unlock the resources but how will you synchronize threads? How will you decide which thread will run first? How will you make one thread wait for another thread to finish execution?
+
+# Condition Variable
+- Condition variables are synchronization primitives that allow threads to wait for certain conditions to be met before proceeding with their execution. They are used in conjunction with mutexes to provide a way for threads to communicate and synchronize their actions.
+- Used to coordinate communication between threads and avoid unnecessary busy-waiting, which can lead to inefficient CPU usage.
+- Defined by <condition_variable> header file.
+- Allow one thread to wait while another thread signals that a task or resource is ready.
+- commonly used in producer-consumer, sender-receiver, and task scheduling scenarious.
+
+
+```cpp
+std::condition_variable variable_name; // Declare a condition variable
+```
+- wait() : Tells the current thread to wait unil the condition variable is notified.
+- wait_for(): Suspends the current thread for a specified relative time duration or until the condition variable is notified, whichever comes first.
+- wait_until(): Similar to wait_for(), but here the time duration is definied as the absolute time.
+- notify_one(): Wakes up one thread that is waiting on the condition variable. The thread selection is random.
+- notify_all(): Wakes up all threads that are waiting on the condition variable.
+
+Example : [condition_variable.cpp](condition_variable.cpp)
+
+* Common Issue with Condition Variables*
+- Spurious Wakeups: A waiting thread may wake up without a notification.
+- Lost wakeup: A thread may miss a notification if it has not started waiting yet.
+- Incorrect predicate usage: Failing to check a conditon after waking up can lead to incorrect behavior.
+- Deadlocks: Incorrect locking and waiting logic can cause threads to block indefinitely, leading to deadlocks.
+
+
+* Brainstorming: How will you avoid spurious wakeups and lost wakeups?
+- To avoid spurious wakeups, always use a predicate (a condition check) in a loop when waiting on a condition variable. This ensures that the thread only proceeds when the desired condition is actually met, even if it wakes up spuriously.
+- To avoid lost wakeups, ensure that the condition variable is notified after the waiting thread has started waiting. This can be achieved by using proper synchronization mechanisms, such as mutexes, to protect the shared state and ensure that the notification is sent after the waiting thread has acquired the lock and is ready to wait.   
+
+# Atomic 
+- Provides a way to perform operations on shared data without the need for explicit locking mechanisms like mutexes.
+- Defined in <atomic> header file.
+- prevent data races by ensuring that operation on shared variables are performed atomically.
+- Provides lock free synchronization, which can lead to better performance in certain scenarios.
+- Enables safe communication between multiple threads without explicti mutexes.
+
+**Note: Do check common atomic operations and flags in the atomic header file.** [atomic operations](https://www.geeksforgeeks.org/cpp/cpp-11-atomic-header/)
