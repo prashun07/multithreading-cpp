@@ -382,3 +382,10 @@ Example : [condition_variable.cpp](condition_variable.cpp)
 - Enables safe communication between multiple threads without explicti mutexes.
 
 **Note: Do check common atomic operations and flags in the atomic header file.** [atomic operations](https://www.geeksforgeeks.org/cpp/cpp-11-atomic-header/)
+
+# Promise and Future
+- Promise is a class template that is used with std::future class.
+- it promises to set the value of std::future object in the future.
+- std::promise is used to pass a value or an exception from one thread to another.
+- std::future is used to retrieve the value or exception set by the promise.
+
