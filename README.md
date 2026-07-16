@@ -302,6 +302,22 @@ Final shared data: 3
 - No, we cannot control the order of execution of threads. it is done by the operating system's scheduler but we can make some thread wait for other thread to finish execution using condition variable(discussed later).
 - The main job of mutex is to protect shared resource from being accessed by multiple threads at the same time. it does not control the order of execution of threads.
 
+# Mutex Types:
+## 1. std::mutex 
+- Just a plain lockable mutex
+## 2. timed_mutex
+- A mutex that can be locked with a timeout. It allows a thread to attempt to acquire the lock for a specified duration, and if it cannot acquire the lock within that time, it will give up and continue executing without blocking indefinitely.
+- try_lock_for(): Attempts to lock the mutex for a specified duration. If the mutex is not available within that time, it returns false.
+- try_lock_until(): Attempts to lock the mutex until a specified time point. If the mutex
+## 3. recursive_mutex
+- A mutex that allows the same thread to lock it multiple times without deadlocking.
+## 4. recursive_timed_mutex
+- A recursive mutex that can be locked with a timeout, similar to `timed_mutex`, allowing the same thread to lock it multiple times without deadlocking, but with the added feature of a timeout for acquiring the lock.
+## 5. shared_timed_mutex
+- A mutex that allows multiple threads to acquire a shared (read) lock simultaneously, while still allowing exclusive (write) locks for a single thread. It also supports timed locking, allowing threads to attempt to acquire the lock for a specified duration or until a specified time point.
+
+---
+
 **Difference between lock_guard and unique_lock(Most Important interview question)**
 # lock_guard
 - Simple mutex wrapper that locks a mutex during construction and automatically unlocks it during destruction(when object goes out of scope).
@@ -315,8 +331,8 @@ std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
 // Mutex will be automatically unlocked when lock goes out of scope
 ```
 Example : [lock_guard.cpp](lock_guard.cpp)
-
-# unique_lock
+# Lock Guard Types
+## 1. unique_lock
 - Flexible mutex wrapper that supports manual locking and unlocking, deferred locking, timed locking, and ownership transfer.
 - Suitable for situations where more control over the locking mechanism is needed.
 - Ownership transfer: it allows transferring ownership of the lock from one `unique_lock` object to another, enabling more complex locking strategies and resource management.
@@ -343,8 +359,32 @@ Example : [unique_lock.cpp](unique_lock.cpp)
 - Yes, we can use lock_guard and unique_lock together in the same program. However, we should be careful to avoid deadlocks and ensure that the locking order is consistent. It is generally recommended to use one type of lock consistently within a given scope or function to maintain clarity and avoid confusion.
 
 *Brainstorming:* Mutex will lock/unlock the resources but how will you synchronize threads? How will you decide which thread will run first? How will you make one thread wait for another thread to finish execution?
+## 2. scoped_lock 
+- feature introduced in C++17 that allows locking multiple mutexes simultaneously, preventing deadlocks by ensuring a consistent locking order.
+- It is a variadic template that can take multiple mutexes as arguments and locks them in a deadlock-free manner.
+```cpp
+std::mutex mtx1, mtx2; // Global mutexes
+std::scoped_lock<std::mutex, std::mutex> lock(mtx1, mtx2); // Lock both mutexes
+// Access shared resources protected by mtx1 and mtx2
+// Mutexes will be automatically unlocked when lock goes out of scope
+```
 
-# Condition Variable
+## 3. shared_lock
+- A shared lock is a type of lock that allows multiple threads to acquire a read-only lock on a shared resource simultaneously, while still preventing any thread from acquiring a write lock on the same resource. This is useful in scenarios where multiple threads need to read data concurrently, but only one thread should be able to modify the data at a time.
+- It can be returned from the function without releasing the lock(via move semantics)
+- It can be released and reacquired multiple times within the same scope.
+- It can be released before it is destroyed, allowing for more flexible lock management.
+```cpp
+std::shared_mutex shared_mtx; // Global shared mutex
+std::shared_lock<std::shared_mutex> lock(shared_mtx); // Acquire a shared lock
+// Access shared resource in read-only mode
+lock.unlock(); // Release the shared lock
+lock.lock(); // Reacquire the shared lock
+```
+
+ 
+
+# Event Handling :: Condition Variable
 - Condition variables are synchronization primitives that allow threads to wait for certain conditions to be met before proceeding with their execution. They are used in conjunction with mutexes to provide a way for threads to communicate and synchronize their actions.
 - Used to coordinate communication between threads and avoid unnecessary busy-waiting, which can lead to inefficient CPU usage.
 - Defined by <condition_variable> header file.
@@ -374,6 +414,8 @@ Example : [condition_variable.cpp](condition_variable.cpp)
 - To avoid spurious wakeups, always use a predicate (a condition check) in a loop when waiting on a condition variable. This ensures that the thread only proceeds when the desired condition is actually met, even if it wakes up spuriously.
 - To avoid lost wakeups, ensure that the condition variable is notified after the waiting thread has started waiting. This can be achieved by using proper synchronization mechanisms, such as mutexes, to protect the shared state and ensure that the notification is sent after the waiting thread has acquired the lock and is ready to wait.   
 
+
+
 # Atomic 
 - Provides a way to perform operations on shared data without the need for explicit locking mechanisms like mutexes.
 - Defined in <atomic> header file.
@@ -389,3 +431,27 @@ Example : [condition_variable.cpp](condition_variable.cpp)
 - std::promise is used to pass a value or an exception from one thread to another.
 - std::future is used to retrieve the value or exception set by the promise.
 
+Analogy to understand promise and future:
+
+Imagine you are an office worker who orders lunch from a store across the street using a phone app.
+
+- The store owner receives your order and makes a promise to fulfill it.
+- He gives you a receipt tied to that promise, so you can collect the order later when it is ready.
+- You pause your work and head down to the store.
+- While the order is still being prepared, you are blocked from receiving it.
+- Once the owner places your order on the counter and allows you to take it, you can stop waiting and return to work.
+
+In this analogy:
+
+- `std::promise` is the store owner making the promise and later setting the value or exception.
+- `std::future` is the receipt you hold to get the result later.
+- `get()` is the action of waiting for the order.
+- `set_value()` or `set_exception()` is the owner fulfilling the promise.
+
+Example: [promise_future.cpp](promise_future.cpp)
+
+*Note: Can promise and future replace global variables?*
+Yes, promise and future can be used instead of global variables to communicate values between threads in multithreaded programs.
+[more](https://github.com/methylDragon/coding-notes/blob/master/C++/07%20C++%20-%20Threading%20and%20Concurrency.md)
+
+# Try_lock () and lock() : [Visit this article](https://www.linkedin.com/pulse/stdlock-stdtrylock-c-amit-nadiger-jajac/)
