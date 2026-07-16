@@ -454,4 +454,5 @@ Example: [promise_future.cpp](promise_future.cpp)
 Yes, promise and future can be used instead of global variables to communicate values between threads in multithreaded programs.
 [more](https://github.com/methylDragon/coding-notes/blob/master/C++/07%20C++%20-%20Threading%20and%20Concurrency.md)
 
-# Try_lock () and lock() : [Visit this article](https://www.linkedin.com/pulse/stdlock-stdtrylock-c-amit-nadiger-jajac/)
+# Try_lock and lock : [Visit this article](https://www.linkedin.com/pulse/stdlock-stdtrylock-c-amit-nadiger-jajac/)
+
