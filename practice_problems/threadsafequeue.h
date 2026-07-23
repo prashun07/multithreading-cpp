@@ -26,7 +26,7 @@ using namespace std;
 template<typename T>
 class ThreadSafeQueue{
     public:
-        void push(T data);
+        void push(T &&data);
         T pop();
         bool is_empty();
     private:
@@ -36,10 +36,10 @@ class ThreadSafeQueue{
 };
 
 template<typename T>
-void ThreadSafeQueue<T>::push(T data)
+void ThreadSafeQueue<T>::push(T && data)
 {
     unique_lock<mutex> lock(t_mutex);
-    t_queue.push(data);
+    t_queue.push(std::move(data));
     t_cv.notify_all();
 }
 
