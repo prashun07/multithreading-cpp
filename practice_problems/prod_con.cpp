@@ -11,13 +11,11 @@ class data_packet{
             {
                 return data;
             }
-            void set_data(vector<T>&data_)
+            void set_data(vector<T>&&data_)
             {
-                this->data=data_;
+                this->data=std::move(data_);
             }
-            ~ data_packet(){
-                // delete [] data;
-            };
+            // ~ data_packet()=default; why this will not do compiler do "move"?
         private:
             vector<T>data;
 };
@@ -27,24 +25,22 @@ ThreadSafeQueue<data_packet<T>>server;
 template<typename T>
 class sender{
     public:
-        sender(data_packet<T>_sdata):sender_data(_sdata){}
-        void set_data(data_packet<T>_sdata)
+        sender(data_packet<T>&_sdata):sender_data(_sdata){}
+        void set_data(data_packet<T>&&_sdata)
         {
-            this->sender_data = _sdata;
+            this->sender_data = std::move(_sdata);
             // acknowledge();
         }
         void send_data()
         {
-            server<T>.push(sender_data);
+            server<T>.push(std::move(sender_data));
             acknowledge();
         }
         void acknowledge()
         {
             cout<<"Data sent successfully"<<endl;
         }   
-        ~sender(){
-            // delete sender_data;
-        }
+        ~sender()=default;
     private:
         data_packet<T>sender_data;
 };
@@ -70,10 +66,7 @@ class client{
             }
             cout<<endl;
         }
-        ~client()
-        {
-
-        }
+        ~client()=default;
     private:
         vector<T>client_data;
 };
@@ -84,13 +77,19 @@ int main()
     data_packet<int>d_packet(data);
 
     sender<int>s_master(d_packet);
-    s_master.send_data();
-
-
     client<int>slave;
-    slave.receive_data();
-    slave.print_data();
 
+
+    thread sender_thread(&sender<int>::send_data, &s_master);
+    thread receiver_thread([&slave]()
+    {
+        slave.receive_data();
+        slave.print_data();
+    });
+
+    sender_thread.join();
+    receiver_thread.join();
+    
     return 0;
 }
 //convert sender and receiver into a thread and run both at the same time
