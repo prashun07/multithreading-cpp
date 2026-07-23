@@ -1,0 +1,17 @@
+*
+
+# Track only the source code files
+!*.cpp
+!*.h
+!*.md
+!.gitignore
+!practice_problems/
+!practice_problems/*.h
+!practice_problems/*.cpp
+!Makefile
+
+
+# Ignore all other files
+.vscode/
+
+
